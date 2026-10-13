@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Abu Farhan Collection — serverless multi-user demo</title>
+    <meta
+      name="description"
+      content="A multi-user website with no application server: peers find each other through public relays, then talk directly over WebRTC with CRDT state sync."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">◆</span>
+        <div>
+          <h1>Abu Farhan Collection</h1>
+          <p class="tagline">Static page · P2P sync · zero application server</p>
+        </div>
+      </div>
+
+      <div class="room-controls">
+        <label class="field">
+          <span>Room</span>
+          <input id="room-input" spellcheck="false" autocomplete="off" />
+        </label>
+        <button id="join-btn" class="btn">Join room</button>
+        <button id="share-btn" class="btn ghost" title="Copy an invite link">
+          Copy invite link
+        </button>
+        <button id="leave-btn" class="btn ghost danger">Leave</button>
+      </div>
+    </header>
+
+    <section class="statusbar">
+      <label class="field name-field">
+        <span>You</span>
+        <input id="name-input" maxlength="24" spellcheck="false" autocomplete="off" />
+        <i id="self-dot" class="dot" aria-hidden="true"></i>
+      </label>
+
+      <div class="badges">
+        <span id="status-badge" class="badge">connecting…</span>
+        <span id="relay-badge" class="badge muted">relays 0</span>
+        <span id="peer-badge" class="badge muted">peers 0</span>
+        <button id="diagnostics-btn" class="btn tiny ghost">details</button>
+      </div>
+    </section>
+
+    <details id="diagnostics" class="diagnostics">
+      <summary>Connection details</summary>
+      <div class="diag-grid">
+        <div>
+          <h3>How this page connects</h3>
+          <ol>
+            <li>
+              Peers announce themselves in the room using <strong>public Nostr relays</strong>
+              (WebSocket, no account, free).
+            </li>
+            <li>
+              Relays forward the WebRTC handshake (SDP) only —
+              <strong>your data never goes through them</strong>.
+            </li>
+            <li>
+              Every peer opens a direct, encrypted <strong>RTCDataChannel</strong> to every
+              other peer. Edits converge with <strong>CRDTs (Yjs)</strong>, so no peer needs
+              to be the "source of truth".
+            </li>
+          </ol>
+        </div>
+        <div>
+          <h3>Live state</h3>
+          <ul>
+            <li>Your peer ID: <code id="diag-self">–</code></li>
+            <li>Relay sockets: <code id="diag-relays">–</code></li>
+            <li>Direct peer connections: <code id="diag-peers">–</code></li>
+            <li>
+              Relay endpoints (editable):
+              <input id="relay-input" spellcheck="false" autocomplete="off" />
+            </li>
+            <li>Saved rooms on this device: <code id="diag-storage">–</code></li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <main>
+      <aside class="panel presence-panel">
+        <h2>In this room <span id="presence-count" class="pill">0</span></h2>
+        <ul id="presence-list" class="presence-list"></ul>
+        <p class="hint">
+          Open this URL in another browser, tab or device — no sign-up, no backend. Share a
+          Wi-Fi network or the public internet; either works.
+        </p>
+      </aside>
+
+      <section class="workspace">
+        <nav class="tabs" role="tablist">
+          <button class="tab active" data-tab="catalog" role="tab">Catalog</button>
+          <button class="tab" data-tab="notes" role="tab">Shared note</button>
+          <button class="tab" data-tab="chat" role="tab">Chat</button>
+        </nav>
+
+        <div class="tab-panel active" id="panel-catalog">
+          <form id="item-form" class="row-form">
+            <input
+              id="item-title"
+              placeholder="Item name (e.g. Diwan al-Mutanabbi)"
+              required
+              maxlength="80"
+            />
+            <input id="item-category" placeholder="Category" maxlength="24" list="categories" />
+            <datalist id="categories"></datalist>
+            <button class="btn" type="submit">Add</button>
+          </form>
+          <p class="hint small">
+            Stored in a <code>Y.Map</code>. Two people adding at the same time never overwrite
+            each other — the CRDT merges both.
+          </p>
+          <ul id="catalog-list" class="catalog-list"></ul>
+          <p id="catalog-empty" class="empty">Nothing in the catalog yet. Add the first item.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-notes">
+          <p class="hint small">
+            A <code>Y.Text</code> document. Type in two browsers at once — characters interleave
+            per keystroke instead of clobbering each other.
+          </p>
+          <textarea
+            id="notes"
+            class="notes"
+            placeholder="Shared notes for this room…"
+            spellcheck="false"
+          ></textarea>
+          <div class="typing" id="typing"></div>
+        </div>
+
+        <div class="tab-panel" id="panel-chat">
+          <p class="hint small">
+            Ephemeral messages over an RTCDataChannel action. They are not stored anywhere —
+            peers who are offline miss them.
+          </p>
+          <ul id="chat-log" class="chat-log"></ul>
+          <form id="chat-form" class="row-form">
+            <input id="chat-input" placeholder="Message the room…" autocomplete="off" />
+            <button class="btn" type="submit">Send</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>
+        Data lives in your browser. Host this folder on any static host (GitHub Pages, Netlify,
+        Cloudflare Pages, an S3 bucket…).
+      </span>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Built from src/ with: npm run build -->
+    <script type="module" src="./bundle.js"></script>
+  </body>
+</html>
