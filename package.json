@@ -1,0 +1,23 @@
+{
+  "name": "abu-farhan-collection",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A static, serverless multi-user website: P2P sync over WebRTC with a CRDT for conflict-free shared state.",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --minify --format=esm --target=es2020 --outfile=bundle.js",
+    "dev": "esbuild src/app.js --bundle --format=esm --target=es2020 --outfile=bundle.js --watch",
+    "serve": "python3 -m http.server 8080 --bind 0.0.0.0",
+    "test": "node --test test/*.test.js",
+    "start": "python3 -m http.server 8080 --bind 0.0.0.0",
+    "smoke": "node test/smoke.dom.mjs"
+  },
+  "dependencies": {
+    "trystero": "^0.26.0",
+    "yjs": "^13.6.33"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "jsdom": "^30.1.2"
+  }
+}
